@@ -1,0 +1,67 @@
+#!/bin/bash
+# Bash Script to create 5-day composite .txt files for OC and SST L3b files
+# that were produced prior with the SeaDAS L2 bin processor for 2016, 2017, and 2018
+# These .txt files are used as inputs for the SeaDAS L3 bin processor 
+
+#### Change directory to 2016 L3b OC Modis files
+cd /media/sf_DISS/barents_data_2016/OC/L3b
+#### Create .txt files for 5-day OC composites
+for i in {2016001..2016366..5}
+do
+ls  A${i}*.L3b_OC.nc > A$((i)).5d.L3b.txt
+ls  A$((i + 1))*.L3b_OC.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 2))*.L3b_OC.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 3))*.L3b_OC.nc >> A$((i)).5d.l3b.txt
+ls  A$((i + 4))*.L3b_OC.nc >> A$((i)).5d.l3b.txt
+done
+#### Change directory to 2016 L3b SST Modis files
+cd /media/sf_DISS/barents_data_2016/SST/L3b
+#### Create .txt files for 5-day SST composites
+for i in {2016001..2016366..5}
+do
+ls  A${i}*.L3b_SST.nc > A$((i)).5d.L3b.txt
+ls  A$((i + 1))*.L3b_SST.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 2))*.L3b_SST.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 3))*.L3b_SST.nc >> A$((i)).5d.l3b.txt
+ls  A$((i + 4))*.L3b_SST.nc >> A$((i)).5d.l3b.txt
+done
+
+#### Repeat for years 2017 and 2018
+## 2017
+cd /media/sf_DISS/barents_data_2017/OC/L3b
+for i in {2017001..2017365..5}
+do
+ls  A${i}*.L3b_OC.nc > A$((i)).5d.L3b.txt
+ls  A$((i + 1))*.L3b_OC.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 2))*.L3b_OC.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 3))*.L3b_OC.nc >> A$((i)).5d.l3b.txt
+ls  A$((i + 4))*.L3b_OC.nc >> A$((i)).5d.l3b.txt
+done
+cd /media/sf_DISS/barents_data_2017/SST/L3b
+for i in {2017001..2017365..5}
+do
+ls  A${i}*.L3b_SST.nc > A$((i)).5d.L3b.txt
+ls  A$((i + 1))*.L3b_SST.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 2))*.L3b_SST.nc >> A$((i)).5d.L3b.txt
+ls  A$((i + 3))*.L3b_SST.nc >> A$((i)).5d.l3b.txt
+ls  A$((i + 4))*.L3b_SST.nc >> A$((i)).5d.l3b.txt
+done
+## 2018
+cd /media/sf_DISS/barents_data_2018/OC/L3b
+for i in {2018001..2018365..5}
+do
+   ls  A${i}*.L3b_OC.nc > A$((i)).5d.L3b.txt
+   ls  A$((i + 1))*.L3b_OC.nc >> A$((i)).5d.L3b.txt
+   ls  A$((i + 2))*.L3b_OC.nc >> A$((i)).5d.L3b.txt
+   ls  A$((i + 3))*.L3b_OC.nc >> A$((i)).5d.l3b.txt
+   ls  A$((i + 4))*.L3b_OC.nc >> A$((i)).5d.l3b.txt
+done
+cd /media/sf_DISS/barents_data_2018/SST/L3b
+for i in {2018001..2018365..5}
+do
+   ls  A${i}*.L3b_SST.nc > A$((i)).5d.L3b.txt
+   ls  A$((i + 1))*.L3b_SST.nc >> A$((i)).5d.L3b.txt
+   ls  A$((i + 2))*.L3b_SST.nc >> A$((i)).5d.L3b.txt
+   ls  A$((i + 3))*.L3b_SST.nc >> A$((i)).5d.l3b.txt
+   ls  A$((i + 4))*.L3b_SST.nc >> A$((i)).5d.l3b.txt
+done

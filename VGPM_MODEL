@@ -1,0 +1,207 @@
+###################################################################################
+# VGPM Net Primary Production Model Using MODIS Ocean Colour (OC) and Sea Surface #
+# Temperature (SST) as input                                                      #
+# Created by Jozef Rusin                                                          #
+# J.J.Rusin@sms.ed.ac.uk                                                          #
+# Last Modified: 27/06/2019                                                       #
+# Python 3.7.3                                                                    #
+###################################################################################
+
+#### Import packages
+# For viewing and creating data arrays
+import numpy as np
+# For opening and appending .nc MODIS files
+import netCDF4 as nc
+from netCDF4 import Dataset
+# For Enabling an interface with the operating system
+import os
+####
+
+#### Check and set working directory
+cwd = os.getcwd()
+cwd
+NPP_OC = os.chdir('C:\\Users\\jozef\\Documents\\EOGIM\\DISS\\NPP\\OC')
+NPP_OC
+####
+
+#### Create list of working files for function to iterate through 
+inList = os.listdir('C:\\Users\\jozef\\Documents\\EOGIM\\DISS\\NPP\\OC')
+print(inList)
+####
+
+#### Load MODIS Ocean Colour data in
+for filename in inList:
+    os.chdir('C:\\Users\\jozef\\Documents\\EOGIM\\DISS\\NPP\\OC')
+    if filename.endswith('.nc'):
+        file_input = nc.Dataset(filename, 'a')
+        file_input
+        # variable with input filename as contents
+        fname = file_input.product_name
+        # Day of the year from file name
+        OCdayOfYear = int(fname.split('.')[0][-3:])
+        OCdayOfYear
+        # Cuts first 8 strings from file name to be used in loading matching SST file later
+        FILE_NAME_CODE = str(fname.split('.')[0][-9:])
+        FILE_NAME_CODE
+        # View data variables
+        print(file_input.variables.keys())
+        ####
+
+        #### Create Latitude variable
+        lat_name = 'lat'
+        lat = file_input.variables[lat_name][:]
+
+        # Create Latitude array for daylength model input, dimensions (888, 1368)
+        lat_input = lat.filled()
+        # reshape array so latitude in one column
+        lat_input = lat_input.reshape(888,1)
+        # Repeat latitude column 1368 times to fill array
+        lat_input = np.repeat(lat_input[:,0], 1368).reshape(888,1368)
+        #np.savetxt("test.csv", TESTARRAY, delimiter=",")
+        ####
+
+        ## Chlorophyll
+        chlor_a = file_input.variables['chl_ocx']
+        # convert to numpy array
+        chlor_a = np.array(chlor_a)
+        ## Photosynthetically active radiation
+        par = file_input.variables['par']
+        # convert to numpy array
+        par = np.array(par)
+        ####
+
+        #### Tool to calculate the number of hours of daylight depending on the day 
+        # of the year and the latitude of the cell
+        def daylength(OCdayOfYear, lat):
+            latInRad = np.deg2rad(lat)
+            declinationOfEarth = 23.45*np.sin(np.deg2rad(360.0*(283.0+OCdayOfYear)/365.0))
+            if -np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth)) <= -1.0:
+                return 24.0
+            elif -np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth)) >= 1.0:
+                return 0.0
+            else:
+                hourAngle = np.rad2deg(np.arccos(-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))))
+                return 2.0*hourAngle/15.0
+        ####
+
+        #### Calculate number of daylight hours with lat_input from file
+        daylength_vec = np.vectorize(daylength)
+        daylight = daylength_vec(OCdayOfYear, lat_input)
+        ####
+
+        #### Tool to calculate chl_total from MODIS surface chlor_a
+        def chl_total_tool(chl):
+            if chl == -32767:
+                return np.nan
+            if chl < 1.0:
+                return 38.0 * chl ** 0.425
+            else:
+                return 40.2 * chl ** 0.507
+        ####
+
+        #### Calculate chl_total
+        chl_vec = np.vectorize(chl_total_tool)
+        chl_total = chl_vec(chlor_a)
+        ####
+
+        #### tool to calculate z_eu
+        def z_eu_tool(chl_total):
+            if chl_total == np.nan:
+                return np.nan
+            else:
+                z_eu = 200.0 * pow(chl_total, (-0.293))
+                return z_eu
+                if z_eu <= 102.0:
+                        return 568.2 * pow(chl_total, (-0.746))
+        ####
+
+        #### calculate z_eu
+        z_eu_vec = np.vectorize(z_eu_tool)
+        z_eu = z_eu_vec(chl_total)
+
+        #### tool to calculate IRR
+        def irrFunc_tool(par):
+            if par == -32767:
+                return np.nan
+            else:
+                return 0.66125 * par / (par + 4.1)
+        ####
+
+        #### calculate par
+        irrFunc_vec = np.vectorize(irrFunc_tool)
+        irrFunc = irrFunc_vec(par)
+        irrFunc
+        ####
+
+        ##### Load in MODIS Sea Surface Temperature data
+        ## Select file with corresponding date of OC file
+        os.listdir('C:\\Users\\jozef\\Documents\\EOGIM\\DISS\\NPP\\SST'):
+            if file.startswith(FILE_NAME_CODE):
+                SST_OC_input = file
+        ## load file
+        sst_input = nc.Dataset(SST_OC_input)
+        ####
+
+        #### create SST variable from SST input
+        sst = sst_input.variables['sst']
+        # convert to numpy array
+        sst = np.array(sst)
+        ####
+
+        #### tool to calculate pb_opt vgpm parameter from SST
+        def pb_opt_tool(sst):
+            if sst == -32767:
+                return np.nan
+            elif sst < -10.0:
+                return 0.00
+            elif sst < -1.0:
+                return 1.13
+            elif sst > 28.5:
+                return 4.00
+            else:
+                return 1.2956 + 2.749e-1 * sst + 6.17e-2 * sst ** 2 - 2.05e-2 * sst ** 3 + 2.462e-3 * sst ** 4 - 1.348e-4 * sst**5 + 3.4132e-6 * sst ** 6 - 3.27e-8 * sst ** 7
+        ####
+
+        #### Calculate pb_opt for file
+        pbopt_vec = np.vectorize(pb_opt_tool)
+        pb_opt = pbopt_vec(sst)
+        ####
+
+        #### NPP tool
+        def npp_tool(pb_opt, chlor_a, daylight, irrFunc, z_eu):
+            if daylight == 0:
+                return -32767
+            elif np.isnan(pb_opt):
+                return -32767
+            elif chlor_a == -32767:
+                return -32767
+            elif np.isnan(irrFunc):
+                return -32767
+            elif np.isnan(z_eu):
+                return -32767
+            else:
+                return pb_opt * chlor_a * daylight * irrFunc * z_eu
+        ####
+
+        #### Calculate npp
+        npp_vec = np.vectorize(npp_tool)
+        npp = npp_vec(pb_opt, chlor_a, daylight, irrFunc, z_eu)
+        ####
+
+        #### Add npp array to input file
+        ## Check original OC input file dimensions
+        file_input.dimensions
+        ## Create correspondening lat and lon dimensions
+        lat_nc = file_input.dimensions['lat'].name
+        lon_nc = file_input.dimensions['lon'].name
+        ## Create new variable
+        nppvariable = file_input.createVariable('npp', 'int16', (lat_nc, lon_nc))
+        ## Add units to variable
+        nppvariable.units = "mg C / m^2 / day "
+        ## Add calculated npp into variable
+        nppvariable[:] = npp[:,:]
+        # Check variable
+        file_input.variables['npp']
+    ## close to save changes
+    file_input.close()
+    ####

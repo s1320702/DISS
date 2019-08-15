@@ -1,0 +1,45 @@
+#!/bin/bash
+#### Bash for L3 5-day composite binning of MODIS OC and SST files for 2016, 2017 and 2018
+
+#### Change directory to 2016 L3b OC MODIS files
+cd/media/sf_DISS/barents_data_2016/OC/L3b
+#### Loop through previously created OC .txt files as inputs for L3 bin processor
+for i in {2016001..2016366}
+do
+    l3bin ifile=A${i}.5d.L3b.txt ofile=A${i}.5d.L3b_OC.nc latnorth=+89 latsouth=+52 loneast=+67 lonwest=+10
+done
+
+#### Change directory to 2016 L3b SST MODIS files
+cd/media/sf_DISS/barents_data_2016/SST/L3b
+#### Loop through previously created SST .txt files as inputs for L3 bin processor
+for i in {2016001..2016366}
+do
+    l3bin ifile=A${i}.5d.L3b.txt ofile=A${i}.5d.L3b_SST.nc latnorth=+89 latsouth=+52 loneast=+67 lonwest=+10
+done
+
+#### Repeat for years 2017 and 2018
+## 2017
+cd/media/sf_DISS/barents_data_2017/OC/L3b
+for i in {2017001..2017365}
+do
+    l3bin ifile=A${i}.5d.L3b.txt ofile=A${i}.5d.L3b_OC.nc latnorth=+89 latsouth=+52 loneast=+67 lonwest=+10
+done
+
+cd/media/sf_DISS/barents_data_2017/SST/L3b
+for i in {2017001..2017365}
+do
+    l3bin ifile=A${i}.5d.L3b.txt ofile=A${i}.5d.L3b_SST.nc latnorth=+89 latsouth=+52 loneast=+67 lonwest=+10
+done
+
+## 2018
+cd/media/sf_DISS/barents_data_2018/OC/L3b
+for i in {2018001..2018365}
+do
+    l3bin ifile=A${i}.5d.L3b.txt ofile=A${i}.5d.L3b_OC.nc latnorth=+89 latsouth=+52 loneast=+67 lonwest=+10
+done
+
+cd/media/sf_DISS/barents_data_2018/SST/L3b
+for i in {2018001..2018365}
+do
+    l3bin ifile=A${i}.5d.L3b.txt ofile=A${i}.5d.L3b_SST.nc latnorth=+89 latsouth=+52 loneast=+67 lonwest=+10
+done

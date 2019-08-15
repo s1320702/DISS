@@ -1,0 +1,145 @@
+###################################################################################
+# Script for Barents Sea ice 2016, 2017 and 2018 maximum sea ice extent plots     #
+# Jozef Rusin: s1320702@ed.ac.uk                                                  #
+# Date 06/05/2019                                                                 #
+# Days of Max and Min sea ice are derived from:                                   #
+# ftp://sidads.colorado.edu/DATASETS/NOAA/G02135/seaice_analysis/Sea_Ice_Index_Reg#
+#-ional_Daily_Data_G02135_v3.0.xlsx                                               #
+# Binary data downloaded from: https://nsidc.org/data/NSIDC-0081                  #
+###################################################################################
+
+#### Import Packages Needed for Plotting Sea Ice Data
+# For 2D plotting
+import matplotlib
+# Command style functions for plotting
+import matplotlib.pyplot as plt
+# Geospatial data processing
+import cartopy
+# Coordinate Reference Systems
+import cartopy.crs as ccrs
+# Adding map features from cartopy
+import cartopy.feature as cfeature
+# Visualising data arrays
+import numpy as np
+# For masking arrays
+import numpy.ma as ma
+####
+
+#### Set working directory
+cwd = os.getcwd()
+cwd
+chwd = os.chdir('C:\\Users\\jozef\\Documents\\EOGIM\\DISS\\sea_ice_data\\sea_ice_plots\\bin\\')
+chwd
+####
+
+#### Load in binary file
+# Load maximum extent 2016
+high2016input = './nt_20160124_f17_nrt_n.bin'
+with open(high2016input, 'rb') as fr:
+    hdr = fr.read(300)
+    high2016data = np.fromfile(fr, dtype=np.uint8)
+# Reshape and rescale
+high2016data = high2016data.reshape(448, 304)
+high2016data = high2016data / 250
+# remove land values
+high2016data = ma.masked_greater(high2016data, 1.0)
+
+# Load maximum extent 2017
+high2017input = './nt_20170310_f18_nrt_n.bin'
+with open(high2017input, 'rb') as fr:
+    hdr = fr.read(300)
+    high2017data = np.fromfile(fr, dtype=np.uint8)
+high2017data = high2017data.reshape(448, 304)
+# Reshape and rescale
+high2017data = high2017data / 250
+# remove land values
+high2017data = ma.masked_greater(high2017data, 1.0)
+
+# Load maximum extent 2018
+high2018input = './nt_20180403_f18_nrt_n.bin'
+with open(high2018input, 'rb') as fr:
+    hdr = fr.read(300)
+    high2018data = np.fromfile(fr, dtype=np.uint8)
+high2018data = high2018data.reshape(448, 304)
+# Reshape and rescale
+high2018data = high2018data / 250
+# remove land values
+high2018data = ma.masked_greater(high2018data, 1.0)
+####
+
+#### Create grid with the same extent as NSIDC projection
+## Details on data projection found here : https://nsidc.org/data/polar-stereo/ps_grids.html
+# Set grid resolution = Polar Stero Northern 25km
+dx = dy = 25000
+# Lowest and highest x grid coordinates
+x = np.arange(-3850000, +3750000, +dx)
+# Lowest and highest y grid coordinates
+y = np.arange(+5850000, -5350000, -dy)
+# check same dimensions as data
+x.shape, y.shape, high2016data.shape
+####
+
+#### Load cartopy 50m land resolution feature
+land_50m = cfeature.NaturalEarthFeature('physical', 'land', '50m',
+                                        edgecolor='k',
+                                        facecolor=cfeature.COLORS['land'])
+####
+
+#### Plot sea ice extents in 3 x 1 grid
+## Plot formatting
+figT = plt.figure(figsize=(25,20))
+## projection parameters
+kw = dict(central_latitude=90, central_longitude=-45, true_scale_latitude=70)
+## Data colour scheme
+cmap = plt.cm.Blues
+####
+
+#### Plotting data
+## High 2016
+ax2 = figT.add_subplot(131, projection=ccrs.NorthPolarStereo(central_longitude= 40))
+# load land and coast outline files
+cs2 = ax2.coastlines(resolution='50m', linewidth=0.5)
+land = ax2.add_feature(land_50m)
+# set gridlines and extent to Barents Sea
+ax2.gridlines()
+ax2.set_extent([20, 60, 65, 85], crs=ccrs.PlateCarree())
+# Add date of image as title
+ax2.set_title('(A) 24/01/2016', x=0.2)
+# Add data
+cs2 = ax2.pcolormesh(x, y, high2016data, cmap=plt.cm.Blues, transform=ccrs.Stereographic(**kw))
+
+
+## High 2017
+ax3 = figT.add_subplot(132, projection=ccrs.NorthPolarStereo(central_longitude= 40))
+# Add land and coast outline files
+cs4 = ax3.coastlines(resolution='50m', linewidth=0.5)
+land = ax3.add_feature(land_50m)
+# set gridlines and extent to Barents Sea
+ax3.gridlines()
+ax3.set_extent([20, 60, 65, 85], crs=ccrs.PlateCarree())
+# Add date of image to title
+ax3.set_title('(B) 10/03/2017', x=0.2)
+
+# Add data
+cs3 = ax3.pcolormesh(x, y, high2017data, cmap=plt.cm.Blues, transform=ccrs.Stereographic(**kw))
+
+## High 2018
+ax4 = figT.add_subplot(133, projection=ccrs.NorthPolarStereo(central_longitude= 40))
+cs4 = ax4.coastlines(resolution='50m', linewidth=0.5)
+land = ax4.add_feature(land_50m)
+# set gridlines and extent to Barents Sea
+ax4.gridlines()
+ax4.set_extent([20, 60, 65, 85], crs=ccrs.PlateCarree())
+# Add image data as title
+ax4.set_title('(C) 03/04/2018', x=0.2)
+cs4 = ax5.pcolormesh(x, y, high2018data, cmap=plt.cm.Blues, transform=ccrs.Stereographic(**kw))
+
+## Subplot and colour bar adjustments
+plt.subplots_adjust(left=0.1, right=0.5, bottom=0.1, top=0.55, wspace=0.1, hspace=0.1)
+sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(0,1))
+sm = plt.cm.ScalarMappable(cmap=cmap,norm=plt.Normalize(0,1))
+cbar_ax = figT.add_axes([0.51, 0.23, 0.02, 0.19])
+figT.colorbar(sm, cax=cbar_ax, label='Sea Ice Fraction')
+
+## Save figure
+figT.savefig('Sea_Ice_Extent_new.png', dpi=500)
